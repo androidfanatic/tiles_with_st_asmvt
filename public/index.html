@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title>Roads of Pune</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.css' rel='stylesheet' />
+    <style>
+        body { margin:0; padding:0; }
+        #map { position:absolute; top:0; bottom:0; width:100%; }
+    </style>
+</head>
+<body>
+
+<div id='map'></div>
+<script>
+mapboxgl.accessToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4M29iazA2Z2gycXA4N2pmbDZmangifQ.-g_vE53SD2WrJ6tFX7QHmA';
+var map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/dark-v9',
+    zoom: 16,
+    center: [73.8567, 18.5204],
+    pitch: 90,
+});
+
+map.once('style.load', function() {
+    // Add Mapillary sequence layer.
+    // https://www.mapillary.com/developer/tiles-documentation/#sequence-layer
+    map.addLayer({
+        "id": "road",
+        "source-layer": "pune_roads",
+        "source": {
+            "type": "vector",
+            "tiles": ["http://localhost:8080/tiles/pune_roads/{z}/{x}/{y}.mvt"],
+            "tolerance": 0,
+        },
+        "type": "line",
+        "paint": {
+          "line-color": "orangered",
+          "line-width": ['step', ['zoom'], 0.4, 14, 1, 16, 2, 18, 4, 20, 8]
+        }
+    });
+
+    const popup = new mapboxgl.Popup({
+        closeButton: false,
+        closeOnClick: false
+    });
+
+    map.on('click', (evt) => {
+        const features = map.queryRenderedFeatures(evt.point);
+        if (features.length > 0) {
+            const feature = features[0];
+            if (feature.properties && feature.properties.name) {
+                map.getCanvas().style.cursor = 'pointer';
+                popup.setLngLat(evt.lngLat)
+                .setHTML(feature.properties.name)
+                .addTo(map);
+            }
+        } else {
+            map.getCanvas().style.cursor = '';
+            popup.remove();
+        }
+    });
+});
+
+map.addControl(new mapboxgl.NavigationControl());
+</script>
+
+</body>
+</html>
