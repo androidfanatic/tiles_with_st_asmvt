@@ -2,7 +2,7 @@ This blog post explores the possibility of generating, caching and serving vecto
 
 ### 1. Setup a test database
 
-Let us begin by firing off a db instance. We use docker for this because of its easily reproduicible and disposable nature. We also use docker-compose because we want to be able to orchestrate multiple containers such as database, caching and other services. For now, we will get started with a single docker image which gives us a postgres instance with PostGIS extension installed.
+Let us begin by firing off a db instance. We use docker for this because of its easily reproducible and disposable nature. We also use docker-compose because we want to be able to orchestrate multiple containers such as database, caching and other services. For now, we will get started with a single docker image which gives us a Postgres instance with PostGIS extension installed.
 
 File: `docker-compose.yml`
 ```
@@ -40,40 +40,36 @@ tar -xvf pune_roads.tar.gz
 ```
 
 
-This will extract a GeoJSON file in the current directory. We want to be able to import this data into our database. In comes `GDAL`. I call it the swiss knife of GIS data. GDAL allows one to work with GIS datasets of all sizes and formats and offers wide variety of features for data translation. Head over to <a href="https://www.gdal.org/" target="_blank">https://www.gdal.org/</a> for quick installation steps and to read more about it.
+This will extract a GeoJSON file in the current directory. We want to be able to import this data into our database. In comes `GDAL`. I call it the swiss-knife of GIS data. GDAL allows one to work with GIS datasets of all sizes and formats and offers wide variety of features for data translation. Head over to <a href="https://www.gdal.org/" target="_blank">https://www.gdal.org/</a> for quick installation steps and to read more about it.
 
 Once installed, we can begin importing the data from the GeoJSON file into our database with this simple one-liner:
 
 ```bash
-ogr2ogr -f "PostgreSQL" PG:"dbname=roads user=postgres host=localhost password=pass" "pune_roads.geojson" -nln pune_roads -append -t_srs "http://spatialreference.org/ref/epsg/4326/" -overwrite
+ogr2ogr -f "PostgreSQL" PG:"dbname=roads user=postgres host=localhost password=pass" \
+  "pune_roads.geojson" -nln pune_roads -append \
+  -t_srs "http://spatialreference.org/ref/epsg/4326/" -overwrite
 ```
 
 Let's also verify that the data was imported.
 
 ```
 docker-compose exec db psql -U postgres roads -c "SELECT COUNT(*) FROM pune_roads"
-
-# Should return something like this:
-
- count
--------
- 36287
-(1 row)
 ```
 
 Now that we've the test database setup with some test data seeded in, let's work on generting the vector tiles on the fly.
 
 ### 3. Create a tile service
 
-To display the data back, we begin by creating an HTTP service that returns vector tiles. To do so, we use a combination of ST_AsMVT, ST_AsMVTGeom and ST_MakeEnvelope functions provided by PostGIS.
+To display the data back, we begin by creating a HTTP service that returns vector tiles. To do so, we use a combination of ST_AsMVT, ST_AsMVTGeom and ST_MakeEnvelope functions provided by PostGIS.
 
-Here's a nodejs script, inspired by Chris's blog post <sup>[2]</sup>:
+Here's a NodeJS script, inspired by Chris's blog post <sup>[2]</sup>:
 
 The interesting bit here is the translation of `/z/x/y` parameters to a bounding box that gets consumed by the function ST_MakeEnvelope(). We also set `clipping = True` for the function ST_AsMVTGeom and select additional database columns (id, name and highway in this case) that get translated to feature properties.
 
 These feature properties can be used for data-driven styling <sup>[3]</sup>, displaying additional information on map and more.
 
 File: `app.js`
+
 ```js
 // mercator
 const SphericalMercator = require('@mapbox/sphericalmercator');
@@ -125,7 +121,7 @@ app.listen(8080);
 
 ### 4. Add the new vector layer
 
-Let's add the tile layer to the map. We used mapbox which is our web map of choice because of it's performance, data-sets and robustness when it comes to configuring and styling the map. 
+Let's add the tile layer to the map. We used mapbox <sup>[4]</sup> which is our web map of choice because of it's performance, data-sets and robustness when it comes to configuring and styling the map. 
 
 Add the layer to map with this snippet:
 
@@ -148,7 +144,7 @@ map.addLayer({
 
 At this point, you should be able to see road data being rendered on the map.
 
-<img src="img/img1.png" height="320" />
+<img src="img/rec2.gif" height="320" />
 
 Next steps:
 
@@ -164,3 +160,5 @@ References:
 [2] https://medium.com/nycplanninglabs/using-the-new-mvt-function-in-postgis-75f8addc1d68
 
 [3] https://docs.mapbox.com/mapbox-gl-js/example/data-driven-circle-colors/
+
+[4] https://docs.mapbox.com/mapbox-gl-js/api/
