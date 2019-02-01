@@ -144,10 +144,9 @@ map.addLayer({
 
 At this point, you should be able to see road data being rendered on the map.
 
-<img src="img/img1.png" height="320" />
 <img src="img/rec2.gif" height="320" />
 
-Next steps:
+Next steps to work on and explore:
 
 - Cache tiles for sometime, say an hour, instead of re-generating again
 - Pre-seeding and invalidating tile cache
