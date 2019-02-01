@@ -149,7 +149,7 @@ At this point, you should be able to see road data being rendered on the map.
 Next steps to work on and explore:
 
 - Cache tiles for sometime, say an hour, instead of re-generating again
-- Pre-seeding and invalidating tile cache
+- Allow pre-seeding and invalidation of cached tiles
 
 You can find the entire source code here at: https://github.com/androidfanatic/tiles_with_st_asmvt
 
