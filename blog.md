@@ -144,6 +144,7 @@ map.addLayer({
 
 At this point, you should be able to see road data being rendered on the map.
 
+<img src="img/img1.png" height="320" />
 <img src="img/rec2.gif" height="320" />
 
 Next steps:
